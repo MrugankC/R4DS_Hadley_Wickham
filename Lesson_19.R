@@ -396,3 +396,126 @@ MASS::mvrnorm(n = 100,mu = 1,Sigma = 1)
 # Make a case for the opposite.
 # Answer :  rnorm() sounds easy to remember than norm_r(). May be our brain remembers shorter names easily.
 
+
+# 19.4.1 Exercises --------------------------------------------------------
+
+
+# Q.1 ---------------------------------------------------------------------
+
+# What’s the difference between if and ifelse()? 
+# Carefully read the help and construct three examples that illustrate the key differences.
+
+# ?`if`
+# if returns the value of the expression evaluated, or NULL invisibly if none was
+# (which may happen if there is no else).
+
+# ?ifelse
+# ifelse returns a value with the same shape as test
+
+# eg  : "ifelse" returns value of same length as the test condition  and returns result even if any
+# of the test expression is TRUE while "if" returns only evaluated expression
+
+if(TRUE){
+  
+  "Hi"
+
+}else{
+  
+  "Bye"
+  
+}
+
+ifelse(c(FALSE,TRUE,FALSE),"HI","BYE")
+
+
+# Q.2 ---------------------------------------------------------------------
+
+# Write a greeting function that says “good morning”, “good afternoon”, or “good evening”, 
+# depending on the time of day. (Hint: use a time argument that defaults to lubridate::now(). 
+# That will make it easier to test your function.)
+
+library(hms)
+library(dplyr)
+
+greet = function(){
+  
+  # Get the current full time
+  ctime_full = as.character(lubridate::now()) 
+  ctime = unlist(strsplit(ctime_full," "))[2] %>% hms::parse_hms()   # Get current time
+  
+  noon = hms::as_hms("12:00:00")    # Set noon time
+  evening = hms::as_hms("18:00:00") # Set evening time
+  
+  # condition
+  ifelse(ctime < noon,"Good Morning",
+         ifelse((noon < ctime) && (ctime < evening),"Good Afternoon","Good Evening"))  
+    
+}
+
+greet()           # Test the function
+
+
+
+# Q.3 ---------------------------------------------------------------------
+
+# Implement a fizzbuzz function. It takes a single number as input. 
+# If the number is divisible by three, it returns “fizz”. 
+# If it’s divisible by five it returns “buzz”. 
+# If it’s divisible by three and five, it returns “fizzbuzz”. 
+# Otherwise, it returns the number. 
+# Make sure you first write working code before you create the function.
+
+# Answer : 
+fizz_or_buzz = function(a_number){
+  
+  # If number is divisible by both 3 and 5 return fizzbuzz
+  if((a_number %% 3 == 0) && (a_number %% 5 == 0)){
+    
+    "fizzbuzz"
+  
+  # If number is divisible by both 3  return fizz
+  }else if(a_number %% 3 == 0){
+    
+    "fizz"
+  
+  # If number is divisible by both 3  return buzz  
+  }else if(a_number %% 5 == 0){
+    
+    "buzz"
+  }else{
+    # If number is not divisible by either 3  or 5 return the number 
+    a_number
+  }   
+
+}
+
+fizz_or_buzz(15)   # returns fizzbuzz
+fizz_or_buzz(9)    # returns fizz
+fizz_or_buzz(10)   # returns buzz
+fizz_or_buzz(8)    # returns the number
+
+
+
+# Q.4 ---------------------------------------------------------------------
+
+# How could you use cut() to simplify this set of nested if-else statements?
+
+if (temp <= 0) {
+  "freezing"
+} else if (temp <= 10) {
+  "cold"
+} else if (temp <= 20) {
+  "cool"
+} else if (temp <= 30) {
+  "warm"
+} else {
+  "hot"
+}
+
+# Answer : Unable to solve on my own
+
+# How would you change the call to cut() if I’d used < instead of <=? 
+# What is the other chief advantage of cut() for this problem? 
+# (Hint: what happens if you have many values in temp?)
+
+# Answer : Unable to solve on my own
