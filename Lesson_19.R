@@ -512,10 +512,117 @@ if (temp <= 0) {
   "hot"
 }
 
-# Answer : Unable to solve on my own
+temp_range = -50 : 50
+# Answer : 
+cut(x = temp_range,
+    breaks = c(-50,0,10,20,30,50),include.lowest = TRUE,
+    labels = c("freezing","cold","cool","warm","hot"))
 
 # How would you change the call to cut() if I’d used < instead of <=? 
+cut(x = temp_range,
+    breaks = c(-50,1,9,19,29,50),include.lowest = TRUE,
+    labels = c("freezing","cold","cool","warm","hot"))
+
 # What is the other chief advantage of cut() for this problem? 
 # (Hint: what happens if you have many values in temp?)
+# Answer : cut() helps to categorize on a vector of values, while if() works only on one value 
 
-# Answer : Unable to solve on my own
+
+# Q.5 ---------------------------------------------------------------------
+
+# What happens if you use switch() with numeric values?
+# Answer : As seen from below block of code, it throws errors
+
+a = function(x,choices){
+  
+  switch(choices,
+         1 = mean(x),
+         2 = median(x),
+         3 = sd(x)
+         )
+}
+
+
+
+# Q.6 ---------------------------------------------------------------------
+# What does this switch() call do? 
+switch(x, 
+       a = ,
+       b = "ab",
+       c = ,
+       d = "cd"
+)
+
+# Answer : The above switch call returns "ab" or "cd" depending on 'x' passed
+
+# What happens if x is “e”?
+x = "e"
+switch(x, 
+       a = ,
+       b = "ab",
+       c = ,
+       d = "cd"
+)
+
+
+# 19.5.1 Exercises --------------------------------------------------------
+
+
+# Q.1 ---------------------------------------------------------------------
+
+# What does commas(letters, collapse = "-") do? Why?
+commas <- function(...) stringr::str_c(..., collapse = ", ")
+
+#Answer :
+# The above commas() function collapses any input character vector into one string where 
+# each element is separated by comma as seen below
+commas(letters)
+
+# Where as commas(letters, collapse = "-") throws an error because ... is reserved for 
+# data of character vectors. collapse = "-" can not be passed into str_c(...) 
+commas(letters, collapse = "-")
+
+
+# Q.2 ---------------------------------------------------------------------
+
+# It’d be nice if you could supply multiple characters to the pad argument, 
+# e.g. rule("Title", pad = "-+"). Why doesn’t this currently work? How could you fix it?
+
+rule <- function(..., pad = "-") {
+  title <- paste0(...)
+  width <- getOption("width") - nchar(title) - 5
+  cat(title, " ", stringr::str_dup(pad, width), "\n", sep = "")
+}
+
+rule("Title", pad = "-+/")
+# Answer : the above code is working, no idea why the question says that current code doesnt work
+
+
+
+# Q.3 ---------------------------------------------------------------------
+
+# What does the trim argument to mean() do? When might you use it?
+# Answer : The trim argument removes certain fraction of arguments before computing the mean
+# From the example given in the documentation, consider a vector x having values 0 to 10, and 
+# an outlier value of 50. It can be seen that trim function is useful in cases where outliers
+# are far away from the majority of observations in the data. 
+x = c(0:10, 50)  # a vector considering outlier
+xm = mean(x)     # returns 8.75
+xm2 = mean(x, trim = 0.10) # returns 5.5 as outliers 0 and 50 are removed.
+
+
+
+
+# Q.4 ---------------------------------------------------------------------
+
+# The default value for the method argument to cor() is c("pearson", "kendall", "spearman"). 
+# What does that mean? What value is used by default?
+# Answer : From the documentation, the default value of method is "pearson".
+
+
+x = c(1,5,10,15,20)
+y = c(2,7,15,20,21)
+
+cor(x,y,method = "pearson")   # 0.970279
+cor(x,y,method = "kendall")   # 1
+cor(x,y,method = "spearman")  # 1
