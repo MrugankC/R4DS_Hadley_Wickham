@@ -1,3 +1,5 @@
+#----------------------------------------------- START--------------------------------------------------
+
 # install and load libraries
 install.packages("magrittr")
 library("magrittr")
@@ -37,3 +39,4 @@ mtcars %$%                      # the dollar pipe facilitates passing the
 mtcars %<>% 
   transform(cyl = cyl * 3)      # Basically a shorthand for mtcars <- mtcars %>% transform(cyl = cyl * 3)
 
+#----------------------------------------------- END--------------------------------------------------
