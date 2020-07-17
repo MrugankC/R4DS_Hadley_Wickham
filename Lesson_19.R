@@ -626,3 +626,5 @@ y = c(2,7,15,20,21)
 cor(x,y,method = "pearson")   # 0.970279
 cor(x,y,method = "kendall")   # 1
 cor(x,y,method = "spearman")  # 1
+
+
