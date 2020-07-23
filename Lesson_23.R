@@ -78,3 +78,104 @@ good_model2 <- optim(c(0,0),measure_distance,data = sim1a)      # error
 # This is because only 2 initialization points c(0,0) is provided
 # It is possible to get a solution for this by providing 3 initialization points c(0,0,0) as below
 good_model2 <- optim(c(0,0,0),measure_distance,data = sim1a)    # success
+
+
+
+# 23.3.1 Predictions ------------------------------------------------------
+
+
+
+# 1. create a grid that covers where our data lies
+sim1_mod = lm(formula = y~x, data = sim1)        # The model for testing  
+grid1 = sim1 %>% modelr::data_grid(x)            # Add the independent variable (sim1$x in this case)
+grid1 = grid1 %>% add_predictions(sim1_mod)      # Add predictions 
+sim1 = sim1 %>% add_residuals(sim1_mod)          # Add residuals
+
+# 2. Visualize the model
+ggplot(sim1, aes(x,y)) +
+  geom_point() +
+  geom_line(mapping = aes(y = pred), data = grid1, color = "red", size = 1)
+
+
+
+ggplot(data = sim1,mapping = aes(resid)) +
+  geom_freqpoly(binwidth = 0.5)
+
+
+ggplot(data = sim1, mapping = aes(x,resid)) +
+  geom_ref_line(h = 0) +
+  geom_point()
+
+
+
+
+# Q.1 ---------------------------------------------------------------------
+
+# Instead of using lm() to fit a straight line, you can use loess() to fit a smooth curve. 
+# Repeat the process of model fitting, grid generation, predictions, and visualisation on sim1 using loess() instead of lm(). 
+# How does the result compare to geom_smooth()?
+
+  
+sim1_mod_2 = loess(formula = y ~ x, data = sim1)        # Model fitting
+grid2 = sim1 %>% modelr::data_grid(x)                   # Independent variable
+grid2 = grid2 %>% modelr::add_predictions(sim1_mod_2)   # Adding predictions
+
+# Visualization
+ggplot(data = sim1, mapping = aes(x,y)) +
+  geom_point() +
+  geom_smooth(mapping = aes(y = pred), data = grid2, color = "red") 
+
+# Answer : It seems geom_smooth doesnt fit a straight line but a more "adjusted / smoothed line"
+
+# Q.2 ---------------------------------------------------------------------
+
+# add_predictions() is paired with gather_predictions() and spread_predictions().
+# How do these three functions differ?
+  
+# Answer:
+# add_predictions() adds a new column "pred" to the data as it can take only single model.
+# But gather_predictions() and spread_predictions() can take  multiple models and hence 
+# can compare predictions of different models
+
+grid3 = grid %>% modelr::gather_predictions(sim1_mod,sim1_mod_2)   # Adds predictions vertically (long)
+grid4 = grid %>% modelr::spread_predictions(sim1_mod,sim1_mod_2)   # Adds predictions horizontally (broad)
+
+# Q.3 ---------------------------------------------------------------------
+
+# What does geom_ref_line() do?
+# What package does it come from? 
+# Why is displaying a reference line in plots showing residuals useful and important?
+
+# Answer:
+# geom_ref_line() adds a reference line to the plot created using ggplot2 package
+# It comes from modelr package
+# Showing a reference line in plots showing residual helps us to visually check if residuals are
+# random and that they don't exhibit a pattern and are not concentrated in some region 
+  
+# Q.4 ---------------------------------------------------------------------
+
+# Why might you want to look at a frequency polygon of absolute residuals? 
+# What are the pros and cons compared to looking at the raw residuals?
+
+# Answer :
+
+sim1 %>% 
+  add_residuals(sim1_mod) %>% 
+  mutate(resid = abs(resid)) %>% 
+  ggplot(mapping = aes(x)) +
+  geom_freqpoly(mapping = aes(resid),binwidth = 0.25)    # frequency polygon of absolute residuals
+
+
+# PROS : 
+# frequency polygon of absolute residuals helps us to visualize the "magnitude" of error of the model
+# If the distribution is skewed towards right, we can say that the magnitude of error by model is low, as model made small mistakes.
+# If the distribution is skewed towards left, we can say that the magnitude of error by model is high, as model made large mistakes.
+
+# CONS :
+# frequency polygon of absolute residuals does not help us to visualize if the model is over-predicting / under - predicting / captures signal in the data properly.
+# If we visualize frequency polygon of residuals, we can see if the model is capturing signal in data properly of the residuals are nomally distributed
+# If the residuals are skewed in any one direction, we can say that the model is biased.
+sim1 %>% 
+  add_residuals(sim1_mod) %>% 
+  ggplot(mapping = aes(x)) +
+  geom_freqpoly(mapping = aes(resid),binwidth = 0.5)   # frequency polygon of residuals
