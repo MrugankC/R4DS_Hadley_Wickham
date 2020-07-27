@@ -179,3 +179,276 @@ sim1 %>%
   add_residuals(sim1_mod) %>% 
   ggplot(mapping = aes(x)) +
   geom_freqpoly(mapping = aes(resid),binwidth = 0.5)   # frequency polygon of residuals
+
+
+
+
+
+df <- tribble(
+  ~y, ~x1, ~x2,
+  4, 2, 5,
+  5, 1, 6
+)
+
+model_matrix(df, y ~ x1 + x2)
+
+View(sim2)
+ggplot(data = sim2,mapping = aes(x,y)) +
+  geom_point()
+
+mod2 = lm(formula = y ~ x, data = sim2)
+
+grid <- sim2 %>% 
+          data_grid(x) %>% 
+          add_predictions(mod2)
+
+
+ggplot(data = sim2,mapping = aes(x,y)) +
+  geom_point() +
+  geom_point(mapping = aes(y = pred),data = grid,color = "red",size = 4)
+
+
+tibble(x = "d") %>% 
+  add_predictions(mod2)
+
+
+
+
+
+mod1 = lm(formula = y ~ x1 + x2, data = sim3) # independent evaluation
+mod2 = lm(formula = y ~ x1 * x2, data = sim3) # interaction evaluation
+
+
+grid1 = sim3 %>% 
+          data_grid(x1, x2) %>% 
+          gather_predictions(mod1, mod2)
+
+
+ggplot(data = sim3,mapping = aes(x = x1,y = y,color = x2)) +
+  geom_point() +
+  geom_line(data = grid1, mapping = aes(y = pred)) +
+  facet_wrap(~ model)
+
+
+sim3 = sim3 %>% 
+          gather_residuals(mod1,mod2)
+
+
+ggplot(sim3, aes(x = x1,y =  resid,color = x2)) +
+  geom_point() +
+  facet_grid( model ~ x2)
+
+
+sim4
+
+
+mod1 = lm(formula =  y ~ x1 + x2, data = sim4)  # Independent evaluation
+mod2 = lm(formula =  y ~ x1 * x2, data = sim4)  # Interactive evaluation
+
+grid = sim4 %>% 
+        data_grid(
+          x1 = seq_range(x1, 5),
+          x2 = seq_range(x2, 5)
+        ) %>% 
+      gather_predictions(mod1,mod2)
+
+
+x1 = rcauchy(100)
+
+seq_range(x1, n = 5, trim = 0.5)
+
+
+x2 = c(0,1)
+
+seq_range(x = x2,n = 5,expand = 0.5)
+
+
+  ggplot(data = grid, mapping = aes(x1,x2)) +
+    geom_tile(mapping = aes(fill = pred)) +
+    facet_wrap(~ model)
+  
+  
+  
+ggplot(data = grid, mapping = aes(x = x1, y = pred,color = x2, group = x2)) +
+  geom_line() +
+  facet_wrap(~ model)
+
+
+ggplot(data = grid, mapping = aes(x = x2, y = pred,color = x1, group = x1)) +
+  geom_line() +
+  facet_wrap(~ model)
+
+
+
+df <- tribble(
+  ~y, ~x,
+  1,  1,
+  2,  2, 
+  3,  3
+)
+
+mod_1 = y ~ x^2 + x
+mod_2 = y ~ I(x^2) + x
+
+
+model_matrix(df,mod_1)
+model_matrix(df,mod_2)
+
+
+model_matrix(df, y ~ poly(x = x,degree = 2))
+library(splines)
+model_matrix(data = df, formula = y ~ ns(x,2))
+
+sim5 = tibble(
+  x = seq(from = 0,to =  3.5 * pi, length = 50),
+  y = 4 * sin(x) + rnorm(length(x))
+)
+
+library(help = "splines")
+ggplot(data = sim5, mapping = aes(x,y)) +
+  geom_point()
+
+
+mod1 = lm(formula = y ~ ns(x = x, df = 1),data = sim5)
+mod2 = lm(formula = y ~ ns(x = x, df = 2),data = sim5)
+mod3 = lm(formula = y ~ ns(x = x, df = 3),data = sim5)
+mod4 = lm(formula = y ~ ns(x = x, df = 4),data = sim5)
+mod5 = lm(formula = y ~ ns(x = x, df = 5),data = sim5)
+
+
+seq_range(x, n = 50, expand = 0.1)
+
+grid = sim5 %>% 
+  data_grid(x = seq_range(x, n = 50, expand = 0.1)) %>%  
+  gather_predictions(mod1,mod2,mod3,mod4,mod5,.pred = "y")
+
+
+ggplot(data = sim5,mapping = aes(x,y)) +
+  geom_point() +
+  geom_line(data = grid,color = "red") + 
+  facet_wrap(~model)
+
+
+
+
+# 23.4.5 Exercises -------------------------------------------------------------------------
+
+# Q.1 ---------------------------------------------------------------------
+# What happens if you repeat the analysis of sim2 using a model without an intercept.
+
+# Answer  : 
+mod2 = lm(formula = y ~ x,data = sim2)         # model with intercept
+grid  = sim2 %>%                               # Creating the grid
+  data_grid(x) %>% 
+  add_predictions(mod2)
+
+mod2_wi = lm(formula = y ~ x - 1, data = sim2)         # model without intercept
+grid_wi  = sim2 %>%                                    # Creating the grid                               
+  data_grid(x) %>% 
+  add_predictions(mod2_wi)
+
+# What happens to the model equation? 
+# Answer : Model equation for model without intercept does not have intercept column    
+model_matrix(data = sim2,formula = y ~ x)        # Has an intercept column
+model_matrix(data = sim2,formula = y ~ x - 1)    # Does not have an intercept column
+
+# What happens to the predictions?
+# Visualizing both models show that predictions remain same.
+ggplot(data = sim2,mapping = aes(x,y)) +
+  geom_point() +
+  geom_point(mapping = aes(y = pred), data = grid, color = "red", size = 4) 
+
+
+ggplot(data = sim2,mapping = aes(x,y)) +
+  geom_point() +
+  geom_point(mapping = aes(y = pred), data = grid_wi, color = "blue", size = 4)
+
+# Q.2 ---------------------------------------------------------------------
+# Use model_matrix() to explore the equations generated for the models that  I fit to sim3 and sim4. 
+# Why is * a good shorthand for interaction?
+
+# Answer : On sim3 dataset
+model_matrix(data = sim3,formula = y ~ x1 + x2)  # returns independent evaluation of variables : Intercept, x1, x2b, x2c, x2d (as x2 is categorical) 
+model_matrix(data = sim3,formula = y ~ x1 * x2)  # returns interactive evaluation of variables : Other than the independent variables above, x1:x2b, x1:x2c, x1:x2d 
+
+# Answer : On sim4 dataset
+model_matrix(data = sim4,formula = y ~ x1 + x2)  # returns independent evaluation of variables : x1, x2 
+model_matrix(data = sim4,formula = y ~ x1 * x2)  # returns interactive evaluation : Other than independent variables above : include x1:x2
+
+
+# * is good shorthand for interaction because it saves time to write long formulae
+# for eg. y ~ x1 * x2 is a shorthand for y = a0 + a1 * x + a2 * x + a12 * x1x2
+
+# Q.3 ---------------------------------------------------------------------
+# Using the basic principles, convert the formulas in the following two models into functions. 
+# (Hint: start by converting the categorical variable into 0-1 variables.)
+
+mod1 <- lm(y ~ x1 + x2, data = sim3)
+mod2 <- lm(y ~ x1 * x2, data = sim3)
+
+# Answer creating one function for both forumlae
+get_2_var_linear_model = function(dataset = "sim3",interaction ="no"){
+
+    # converting categorical columns to 0-1 variables (One hot encoding)
+  
+    unique_x2 = unique(sim3$x2)                 # find each unique element in the vector
+  
+  
+    for(each in unique_x2){                     # loop over each unique variable 
+    
+      new_column = ifelse(sim3$x2 == each,1,0)  # create a new variable with 0 1 values
+      sim3[paste0("x2",each)] = new_column      # create a new column in DF
+    }
+  
+  
+  # create prediction based on interaction
+  
+    if(interaction == "no"){                    # If interaction is not needed
+    
+      mm = sim3 %>% 
+        mutate("Intercept" = 1) %>%             # Create intercept with defalt value of 1
+        dplyr::select("Intercept","x1","x2b","x2c","x2d")  # select only independent variables
+      
+    
+    }else{                                      # If interaction is yes
+    
+      mm = sim3 %>%  
+        mutate("Intercept" = 1,                 # create default intercept value = 1
+               "x1:x2b" = x1 * x2b,             # interaction of x1 with x2b 
+               "x1:x2c" = x1 * x2c,             # interaction of x1 with x2c
+               "x1:x2d" = x1 * x2d) %>%         # interaction of x1 with x2d
+        dplyr::select("Intercept","x1","x2b","x2c","x2d","x1:x2b","x1:x2c","x1:x2d")  # select interactive variables
+    
+    }
+    
+    return(mm)
+}
+
+# Answer 
+get_2_var_linear_model(sim3,"no")     # Interaction == no : output similar to mod1
+get_2_var_linear_model(sim3,"yes")     # Interaction == no : output similar to mod2
+
+
+
+# Q.4 ---------------------------------------------------------------------
+# For sim4, which of mod1 and mod2 is better?
+# I think mod2 does a slightly better job at removing patterns, but it’s pretty subtle. 
+# Can you come up with a plot to support my claim?
+
+# Answer
+mod1 <- lm(y ~ x1 + x2, data = sim4)
+mod2 <- lm(y ~ x1 * x2, data = sim4)
+
+# Creating a grid of residuals
+grid = gather_residuals(data = sim4,mod1,mod2)
+
+# If we do a group by on grid4, we can prove numerically that 
+# 1. the sum of all residuals of mod2 is less than mod1
+# 2. the mean of all residuals of mod2 is less than mod1 
+# 3. RMSE of mod2 is less than that of mod1 
+grid %>% 
+  group_by(model) %>% 
+  summarize(mean_resid = mean(resid),
+            sum_resid = sum(resid),
+            rmse_resid = sqrt(mean(resid^2)))
+
