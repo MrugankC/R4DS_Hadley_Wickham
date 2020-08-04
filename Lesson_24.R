@@ -84,5 +84,133 @@ diamonds2 %>%
 # One such metric is RMSE which we see is very less as compare to the range of prices
 range(diamonds$price)                                       # range of price in diamonds dataset
 rmse(model = mod_diamond2,data = diamonds2)                 # rmse of the model   
+mae(model = mod_diamond2,data = diamonds2)
 
 
+
+# 24.3.5 Exercises ------------------------------------------------------------------
+
+
+# Q.1 ---------------------------------------------------------------------
+# Use your Google sleuthing skills to brainstorm why there were fewer than expected flights on Jan 20, May 26, and Sep 1. 
+# (Hint: they all have the same explanation.) How would these days generalise to another year?
+
+# Answer :
+# Creating the data
+daily = flights %>% 
+  mutate(date = make_date(year, month, day)) %>% 
+  group_by(date) %>% 
+  summarize(n = n()) %>% 
+  mutate(wday = wday(x = date,label = TRUE))
+
+# creating the model : number of flights is dependent on weekday
+mod = lm(formula = n ~ wday,data = daily)
+
+# Adding residuals
+daily = daily %>% 
+  add_residuals(mod)
+
+# Filtering on the given date
+q1_dates = lubridate::as_date(c("2013-01-20","2013-05-26","2013-09-01"))
+
+# Getting residuals of the given three dates. As we can see it is more than 100 for every day
+q1_df = daily %>% 
+          filter(date %in% q1_dates)
+
+# All these dates were Sundays which were preceding Mondays which were national holidays in the US
+# Hence people did not travel much on these days due to long weekend
+
+# Q.2 ---------------------------------------------------------------------
+# What do the three days with high positive residuals represent? 
+# How would these days generalise to another year?
+daily %>% 
+  top_n(3, resid)
+
+# Answer :
+# Top 3 positive residuals means there were higher number of  actual flights than predicted flights
+# These 3 dates 30th November (Saturday), 1st December(Sunday), 28th December(Saturday)
+# had higher than expected traffic because they may denote weekends that beginning of the holiday season
+
+
+# Q.3 ---------------------------------------------------------------------
+# Create a new variable that splits the wday variable into terms, but only for Saturdays, 
+# i.e. it should have Thurs, Fri, but Sat-summer, Sat-spring, Sat-fall.
+# How does this model compare with the model with every combination of wday and term?
+
+# creating a function where term is calculated only for week day
+sat_term = function(data,sat_symbol){
+  
+  # Creating the terms
+  data$term = cut(x = data$date,
+                  breaks = ymd(20130101, 20130605, 20130825, 20140101),
+                  labels = c("spring","summmer","fall"))
+  
+  # Converting factor to character
+  data$wday  = as.character(data$wday)
+  
+  # Creating term for saturday and leaving other Weekdays as it is 
+  data$sat_term_n_wday = ifelse(data$wday == sat_symbol,
+                         paste(data$wday,data$term,sep = "_"),
+                         data$wday)
+  
+  return(data)
+}
+
+# Creating the new column for term + saturday
+daily <- sat_term(daily,"土")
+
+mod1 = lm(formula = n ~ wday + term,data = daily)  # model 1 : independent evaluation of term and week day
+mod2 = lm(formula = n ~ wday * term,data = daily)  # model 2 : interactive evaluation of term and weekday 
+mod3 = lm(formula = n ~ sat_term_n_wday,data = daily) # model 3: evaluation of sat_term _ wday
+
+# Creating a results comparison table
+results <- tibble(
+  
+  mod_names = c("mod1","mod2","mod3"),
+  RMSE = c(rmse(mod1,daily),rmse(mod2,daily),rmse(mod3,daily)),
+  MAE = c(mae(mod1,daily),mae(mod2,daily),mae(mod3,daily))
+  
+ 
+)
+
+# Answer :
+# As we can see the new model (mod3) performs worse than other 2 models
+
+
+# Q.4 ---------------------------------------------------------------------
+# Create a new wday variable that combines the day of week, term (for Saturdays), and public holidays. 
+# What do the residuals of that model look like?
+
+
+# Q.5 ---------------------------------------------------------------------
+# What happens if you fit a day of week effect that varies by month (i.e. n ~ wday * month)? 
+# Why is this not very helpful?
+
+# Q.6 ---------------------------------------------------------------------
+# What would you expect the model n ~ wday + ns(date, 5) to look like? 
+# Knowing what you know about the data, why would you expect it to be not particularly effective?
+
+
+# Q.7 ---------------------------------------------------------------------
+# We hypothesised that people leaving on Sundays are more likely to be business travellers who need to be somewhere on Monday. 
+# Explore that hypothesis by seeing how it breaks down based on distance and time: 
+# if it’s true, you’d expect to see more Sunday evening flights to places that are far away.
+
+# Q.8 ---------------------------------------------------------------------
+# It’s a little frustrating that Sunday and Saturday are on separate ends of the plot. 
+# Write a small function to set the levels of the factor so that the week starts on Monday.
+
+mod3 = MASS::rlm(formula = n ~ wday * term, data = daily)
+
+daily %>% 
+  add_residuals(model = mod3,var = "resid") %>% 
+  ggplot(mapping = aes(date,resid)) +
+  geom_line() +
+  geom_hline(yintercept = 0, colour = "white", size = 2)
+
+
+
+library(splines)
+
+
+ns(x = daily$date,df = 5)
