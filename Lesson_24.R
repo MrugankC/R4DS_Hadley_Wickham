@@ -3,7 +3,7 @@ library(modelr)
 options(na.action = na.warn)
 library(nycflights13)
 library(lubridate)
-
+library(splines)
 
 
 # 24.2.3 Exercises ------------------------------------------------------------------
@@ -97,11 +97,13 @@ mae(model = mod_diamond2,data = diamonds2)
 
 # Answer :
 # Creating the data
+
 daily = flights %>% 
   mutate(date = make_date(year, month, day)) %>% 
   group_by(date) %>% 
   summarize(n = n()) %>% 
   mutate(wday = wday(x = date,label = TRUE))
+  
 
 # creating the model : number of flights is dependent on weekday
 mod = lm(formula = n ~ wday,data = daily)
@@ -157,7 +159,7 @@ sat_term = function(data,sat_symbol){
 }
 
 # Creating the new column for term + saturday
-daily <- sat_term(daily,"土")
+daily <- sat_term(daily,"Sat")
 
 mod1 = lm(formula = n ~ wday + term,data = daily)  # model 1 : independent evaluation of term and week day
 mod2 = lm(formula = n ~ wday * term,data = daily)  # model 2 : interactive evaluation of term and weekday 
@@ -181,14 +183,101 @@ results <- tibble(
 # Create a new wday variable that combines the day of week, term (for Saturdays), and public holidays. 
 # What do the residuals of that model look like?
 
+# Answer : 
+# Getting list of 2013 US public holidays from google
+public_holidays = lubridate::as_date(c("2013-01-01","2013-01-21","2013-05-27",
+                                       "2013-07-04","2013-09-02","2013-11-11",
+                                       "2013-11-28","2013-12-25"))
+
+# Creating a public holiday column
+daily$pub_hol = ifelse(daily$date %in% public_holidays,TRUE,FALSE)
+
+# Combining the wday+sat_term column with public holiday column
+daily$wday_sat_term_pub_hol = ifelse(daily$pub_hol,paste(daily$sat_term_n_wday,"PH",sep = "_"),daily$sat_term_n_wday)
+
+# Creating a model
+mod4 = lm(formula = n ~ wday_sat_term_pub_hol,data = daily)
+
+
+# Plotting the residuals : We can see that the model captures trend properly but is 
+daily %>% 
+  gather_residuals(model1 = mod1,model4 = mod4) %>% 
+  ggplot(aes(date, resid, colour = model)) +
+  geom_line() +
+  geom_hline(yintercept = 0, color = "white", size = 2) 
+
+
+# The RMSE and MAE is less than other 3 models
+results = rbind(results,tibble(
+                          mod_names = "mod4",
+                          RMSE = rmse(mod4,daily),
+                          MAE = mae(mod4,daily)
+          ))
 
 # Q.5 ---------------------------------------------------------------------
 # What happens if you fit a day of week effect that varies by month (i.e. n ~ wday * month)? 
 # Why is this not very helpful?
 
+# Answer
+# Create a function to convert date to month
+get_month = function(date = daily$date){
+  
+  cut(x = date,
+      breaks = lubridate::as_date(c("2013-01-01","2013-01-31","2013-02-28","2013-03-31","2013-04-30","2013-05-31","2013-06-30","2013-07-31","2013-08-31","2013-09-30","2013-10-31","2013-11-30","2014-01-01")),
+      labels = c(1,2,3,4,5,6,7,8,9,10,11,12)
+      )
+  
+}
+
+# getting the month column
+daily$month = get_month(daily$date)
+
+# creating model 
+mod5 = lm(formula = n ~ wday * month,data = daily)
+
+# plotting the residual graph
+daily %>% 
+  add_residuals(mod5,"resid5") %>% 
+  ggplot(aes(date,resid5)) +
+  geom_line() + 
+  geom_hline(yintercept = 0,colour = "white", size = 2)
+
+# Comparing the RMSE and MAE statistic
+results = rbind(results,tibble(
+  mod_names = "mod5",
+  RMSE = rmse(mod5,daily),
+  MAE = mae(mod5,daily)
+))
+
+# Although this model has lower RMSE and MAE, the residual graph shows that it does
+# not perform well, particularly for months of November and December, suggesting that flying behaviour
+# for the months on weekdays of November and December is different from that of other months.
+
 # Q.6 ---------------------------------------------------------------------
 # What would you expect the model n ~ wday + ns(date, 5) to look like? 
 # Knowing what you know about the data, why would you expect it to be not particularly effective?
+
+# Answer:
+# Creating the model
+mod6 = lm(formula = n ~ wday + ns(date, 5), data = daily)
+
+# plotting the residuals
+daily %>% 
+  gather_residuals(model1 = mod1, model6 = mod6) %>% 
+  ggplot(mapping = aes(date,resid,colour = model)) +
+  geom_line() +
+  geom_hline(yintercept = 0,size = 2, color = "white")
+  
+# getting the results
+results = rbind(results,tibble(
+  mod_names = "mod6",
+  RMSE = rmse(model = mod6,data = daily),
+  MAE = mae(model = mod6,data = daily)
+))
+
+# It seems that the model does not work well, because natural splines of a date variable
+# are not helpful to predict number of flight. After all natural spline of a date
+# are just numbers and have no significance in predicting the number of flights
 
 
 # Q.7 ---------------------------------------------------------------------
@@ -196,21 +285,37 @@ results <- tibble(
 # Explore that hypothesis by seeing how it breaks down based on distance and time: 
 # if it’s true, you’d expect to see more Sunday evening flights to places that are far away.
 
+# Answer
+# Creating the data that is needed for testing this hypothesis
+
+
+sunday_fights = flights %>% 
+                  dplyr::select(year,month,day,sched_dep_time,distance) %>%       # select necessary columns 
+                  mutate(date = make_date(year, month, day),                      # create date out of year month and day
+                         sched_dep_part_of_day = cut(x = sched_dep_time,             
+                                                     breaks = c(000,600,1000,1500,2000,2400),
+                                                     labels = c("Early Morning","Morning","Noon","Evening","Night")),  # create sched dep part of day based on time
+                         wday = wday(date,label = TRUE)                           # create weekday 
+                           ) %>% 
+                  dplyr::filter(wday == "Sun") %>%                                # filter sunday data
+                  group_by(sched_dep_part_of_day) %>%                             # group by scheduled departure part of day
+                  summarize(number_of_filghts = n(),                              # number of flights scheduled in evening  
+                            cum_distance = sum(distance))                         # sum of distances of all flights travelled
+
+# As we can see from the above data the number of scheduled flights on Sundays 
+# and cumulative distance travelled is greater in Evening between 3pm and 8 pm
+
+
 # Q.8 ---------------------------------------------------------------------
 # It’s a little frustrating that Sunday and Saturday are on separate ends of the plot. 
 # Write a small function to set the levels of the factor so that the week starts on Monday.
+# Answer :
+# Create a vector of new order that we want to specify
+new_wday_order = c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")
 
-mod3 = MASS::rlm(formula = n ~ wday * term, data = daily)
-
+# Create the graph 
 daily %>% 
-  add_residuals(model = mod3,var = "resid") %>% 
-  ggplot(mapping = aes(date,resid)) +
-  geom_line() +
-  geom_hline(yintercept = 0, colour = "white", size = 2)
-
-
-
-library(splines)
-
-
-ns(x = daily$date,df = 5)
+  add_predictions(model = mod,var = "pred_only_wday") %>% 
+  mutate(wday = factor(x = wday,levels = new_wday_order)) %>%   # use the factor() to set new levels
+  ggplot(mapping = aes(x = wday, y = n)) +
+  geom_boxplot()
