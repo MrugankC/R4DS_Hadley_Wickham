@@ -1,0 +1,76 @@
+---
+title: "rmd_pdf"
+author: "ET"
+date: "8/16/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown 
+## Test for LARA
+
+*This* is an R Markdown document that may be(?) used for **Report** generation. 
+
+### subscripts and superscripts
+3^2^ = 9
+
+log~10~100 = 2
+
+
+### Bullets and lists
+
+* Item A[^quick-fox]
+
+* Item B
+  
+  * Item B.1
+  
+  * Item B.2
+  
+  
+1. Item 1 
+
+2. Item 2 
+
+### Horizontal rule
+******
+
+
+### Links and images
+
+<www.google.com>
+
+[go here for anything](www.google.com)
+
+![some image?](C:/M/ET/lara_uk/rd/dev/data/usr/defcomp/sys/laralogo2.png) 
+
+
+### Simple Tables
+
+Checklist | Status
+--------- | ------
+Point 1   | Done
+Point 2   | Pending
+
+### Formatted Tables
+
+```{r}
+
+knitr::kable(
+  mtcars[1:5, ], 
+  caption = "A knitr kable."
+)
+
+
+```
+
+
+
+
+
+> Some block quote
+### FootNote
+[^quick-fox] Some footnote

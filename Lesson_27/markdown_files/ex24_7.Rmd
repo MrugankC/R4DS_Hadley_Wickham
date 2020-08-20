@@ -1,0 +1,52 @@
+---
+title: "ex24.7"
+author: "Mrugank"
+date: "8/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# How diamonds vary by cut, color and clarity?
+
+We will explore the **diamonds** data set in ggplot package to see distribution of diamonds based on different attributes. *Cut, Color and Clarity* are `r  class(diamonds$cut)` variables. A simple bar plot is helpful for visualizing the distribution of a factor variable.
+
+
+## 1. Cut
+*Cut* has levels ordered as `r levels(diamonds$cut)`. 
+
+```{r cut}
+ggplot(data = diamonds,mapping = aes(x = cut)) +
+  geom_bar()
+
+```
+
+As you can see from the above graph, most of the diamonds fall under the "G" Color category.
+
+
+## 2. Color
+*Colour* has levels ordered as `r levels(diamonds$color)`. 
+```{r color}
+ggplot(data = diamonds,mapping = aes(x = color)) +
+  geom_bar()
+
+```
+
+As you can see from the above graph, most of the diamonds fall under the "Ideal" Cut category.
+
+
+
+## 3. Clarity
+*Clarity* has levels ordered as `r levels(diamonds$clarity)`. 
+
+```{r clarity}
+ggplot(data = diamonds,mapping = aes(x = clarity)) +
+  geom_bar()
+
+```
+
+As you can see from the above graph, most of the diamonds fall under the "SI1" Clarity category.

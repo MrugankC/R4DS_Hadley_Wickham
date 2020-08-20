@@ -1,0 +1,41 @@
+---
+title: "Mrugank CV"
+date: "8/16/2020"
+output: pdf_document
+---
+
+# Education
+
+* Master of Business Administration 
+  
+  **2013 - 2015**
+  
+  *Operations Management* 
+  
+  Symbiosis Institute of Business Management, Pune
+
+
+* Bachelors of Engineering 
+  
+  **2007 - 2011**
+  
+  *Electronics and Telecommunication Engineering* 
+  
+  BDCOE, Wardha
+
+******
+
+# Employement
+
+* Prismer Business Solution 
+  
+  **2019 - 2020**
+  
+  *Bilingual Data Scientist / Business Analyst* 
+  
+* Capgemini 
+  
+  **2015 - 2019**
+  
+  *Business Analyst / Data Scientist* 
+  
