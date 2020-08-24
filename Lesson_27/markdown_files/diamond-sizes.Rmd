@@ -11,6 +11,10 @@ smaller <- diamonds %>%
   filter(carat <= 2.5)
 ```
 
+
+Q.2 Download diamond-sizes.Rmd from https://github.com/hadley/r4ds/tree/master/rmarkdown. Add a section that describes the largest 20 diamonds, including a table that displays their most important attributes.
+
+Answer : 
 We have data about `r nrow(diamonds)` diamonds. Only 
 `r nrow(diamonds) - nrow(smaller)` are larger than
 2.5 carats. The distribution of the remainder is shown
@@ -35,3 +39,42 @@ knitr::kable(x = largest_20)
 ```
 
 
+Q. 3 Modify diamonds-sizes.Rmd to use comma() to produce nicely formatted output. Also include the percentage of diamonds that are larger than 2.5 carats.
+
+Answer : The table has been reprinted by modifying the "price" attribute tp use comma function
+```{r}
+comma <- function(x) format(x, digits = 2, big.mark = ",")
+largest_20$price <- sapply(largest_20$price, function(x) comma(x))
+largest_20
+```
+
+
+The percentage of diamonds that are greater that 2.5 carats is `r comma((nrow(largest_20) / nrow(diamonds)) * 100)` %
+
+
+
+Q. 4 Set up a network of chunks where d depends on c and b, and both b and c depend on a. Have each chunk print lubridate::now(), set cache = TRUE, then verify your understanding of caching.
+
+
+```{r a, echo = TRUE}
+lubridate::now()
+
+```
+
+```{r b , cache=TRUE, dependson=c("a"), echo = TRUE}
+
+lubridate::now()
+
+```
+
+```{r c , cache=TRUE, dependson=c("a"), echo = TRUE}
+
+lubridate::now()
+
+```
+
+```{r d, cache=TRUE, dependson=c("b","c"), echo = TRUE}
+
+lubridate::now()
+
+```
